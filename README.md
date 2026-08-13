@@ -489,17 +489,6 @@ curl -I http://localhost:4173/weather/seoul
 /api/astronomy   → HTTP 200, resultCode 00
 ```
 
-### 9. 최종 제출 체크리스트
-
-- [ ] `.env.local`이 Git에 포함되지 않았는가
-- [ ] `npm run lint`가 오류 없이 끝나는가
-- [ ] `npm test`의 테스트 6개가 통과하는가
-- [ ] `npm run build`가 성공하고 `dist/`가 생성되는가
-- [ ] `/weather/seoul`을 직접 열고 새로고침해도 화면이 나오는가
-- [ ] 기상청·천문 API가 `resultCode 00`을 반환하는가
-- [ ] API 실패 시 기본 데이터라는 안내가 화면에 표시되는가
-- [ ] 서비스 소개, 날씨 홈, 상세, 디지털 창문과 404 화면을 확인했는가
-
 ## 배포 전에 반드시 알아야 할 점
 
 ### 1. 운영 API 프록시가 포함되어 있습니다
@@ -650,16 +639,6 @@ git ls-files '.env*'
 ```
 
 정상 결과에서는 `.env.example`만 추적됩니다.
-
-## 이번 제출 전 구조 개선
-
-- `WeatherHome.vue`의 3,070줄 scoped CSS를 `WeatherHome.css`로 분리해 화면 로직 파일을 1,465줄로 축소했습니다.
-- 브라우저 저장소 캐시를 `useWeatherCache` composable로 분리하고 만료·손상 데이터 동작을 테스트합니다.
-- 사용되지 않던 호환용 `weatherScene.js`, Store 상태와 action을 제거했습니다.
-- 실제 장면에서 선택되지 않는 태양 포함 영상 2개와 매니페스트 항목을 제거해 공개 자산을 약 22MB 줄였습니다.
-- 장면 분류, 강수 효과, 기상청 좌표 변환, 지역 조회와 캐시에 자동 테스트 6개를 추가했습니다.
-- 개발·운영 환경이 공용 API 프록시를 사용하도록 정리하고 운영 Node 서버와 SPA fallback을 추가했습니다.
-- `VITE_MEDIA_BASE_URL`로 로컬 영상과 CDN 영상을 코드 변경 없이 전환할 수 있습니다.
 
 ## 앞으로 확장하고 싶은 서비스
 
