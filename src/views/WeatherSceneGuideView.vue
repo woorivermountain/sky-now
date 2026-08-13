@@ -11,18 +11,19 @@ const router = useRouter()
     <h1><span>날씨 데이터가</span><span>디지털 창문이 되는 과정</span></h1>
     <p class="guide-lead">
       SKY NOW의 디지털 창문은 정해진 배경 하나를 재생하는 방식이 아닙니다.
-      선택 지역의 현재 날씨와 일출·일몰을 계산해 바깥의 빛과 움직임을 구성합니다.
+      선택 지역의 기상청 실황·예보와 천문연구원 일출·일몰을 정규화한 뒤
+      장면 분류, 영상 선택, 태양 궤적과 강수 효과를 조합해 바깥의 빛과 움직임을 구성합니다.
     </p>
 
     <div class="flow">
-      <article><span>01 · INPUT</span><strong>지역 날씨 수집</strong><small>기온, 습도, 강수량과 풍속은 기상청 실황에서, 하늘 상태는 가장 가까운 초단기예보에서
+      <article><span>01 · INPUT</span><strong>지역 데이터 수집</strong><small>기온·습도·강수·풍속은 기상청 실황과 예보에서, 일출·일몰·박명은 천문연구원 XML에서
           받습니다.</small></article>
       <i>→</i>
-      <article><span>02 · ENGINE</span><strong>실시간 장면 계산</strong><small>현재 시각이 일출과 일몰 사이 어디에 있는지 계산하고 날씨 코드를 장면 단계로
-          분류합니다.</small></article>
+      <article><span>02 · ENGINE</span><strong>장면 프로필 계산</strong><small>현재 시각의 낮 진행률과 날씨 코드를 이용해 팔레트, 태양 위치, 구름 농도와 강수 강도를
+          계산합니다.</small></article>
       <i>→</i>
-      <article><span>03 · OUTPUT</span><strong>디지털 창문에 반영</strong><small>태양 위치, 화면 밝기, 구름 농도, 영상 소스, 비·눈 효과에 계산값을
-          적용합니다.</small></article>
+      <article><span>03 · OUTPUT</span><strong>레이어로 자연스럽게 합성</strong><small>원본 속도의 영상, 절차형 태양, 색상 팔레트와 비·눈 Canvas를 겹치고 장면 전환을
+          부드럽게 연결합니다.</small></article>
     </div>
 
     <section class="formula-section">
@@ -38,41 +39,18 @@ const router = useRouter()
           <p>정오에 가장 밝고 일출·일몰에 낮아지며 흐릴수록 전체 밝기를 줄입니다.</p>
         </article>
         <article><span>구름 영상</span><strong>구름량 + 풍속</strong>
-          <p>구름량은 영상 농도, 풍속은 영상 재생 속도에 반영합니다.</p>
+          <p>구름량은 영상 농도로 반영하고, 풍속과 움직임 지수가 가까운 원본 영상을 선택합니다. 압축 노이즈를 줄이기 위해 재생 속도는 바꾸지 않습니다.</p>
         </article>
         <article><span>날씨 효과</span><strong>Weather Code</strong>
-          <p>맑음, 흐림, 안개, 비, 눈, 뇌우를 구분해 서로 다른 장면과 효과를 적용합니다.</p>
+          <p>PTY·RN1·날씨 코드로 이슬비, 약한 비, 보통 비, 강한 비, 소나기, 눈과 뇌우를 세분화합니다.</p>
+        </article>
+        <article><span>장면 전환</span><strong>선택 소스 + Crossfade</strong>
+          <p>선택 지역이나 날씨가 바뀔 때 영상 레이어와 팔레트를 단계적으로 전환해 화면이 갑자기 끊기는 느낌을 줄입니다.</p>
+        </article>
+        <article><span>성능 제어</span><strong>Visibility + Lifecycle</strong>
+          <p>화면 밖 영상, 비활성 탭과 강수 Canvas는 일시 중지하고 컴포넌트가 사라질 때 타이머와 이벤트를 정리합니다.</p>
         </article>
       </div>
-    </section>
-
-    <section class="roadmap-section">
-      <div>
-        <p>SCENERY ROADMAP</p>
-        <h2>하루의 흐름과 퇴근길을 더 잘 느끼도록 확장할 예정입니다.</h2>
-      </div>
-      <ul>
-        <li><span>01</span>
-          <div><strong>날씨별 영상 소스 확장</strong>
-            <p>맑음·옅은 구름·짙은 흐림·약한 비·폭우·눈·안개 등 더 세밀한 단계의 영상을 확보합니다.</p>
-          </div>
-        </li>
-        <li><span>02</span>
-          <div><strong>퇴근길 날씨 안내 확장</strong>
-            <p>퇴근 시각의 비, 바람, 체감온도와 일몰 여부를 한 문장으로 안내합니다.</p>
-          </div>
-        </li>
-        <li><span>03</span>
-          <div><strong>시간대별 장면 품질 개선</strong>
-            <p>새벽, 일출, 정오, 골든아워, 일몰, 야간의 색감과 전환을 더 자연스럽게 다듬습니다.</p>
-          </div>
-        </li>
-        <li><span>04</span>
-          <div><strong>경로와 도착지 날씨 연동</strong>
-            <p>출발지와 도착지의 날씨 차이, 예상 이동 시간과 귀가 시점의 하늘을 연결할 예정입니다.</p>
-          </div>
-        </li>
-      </ul>
     </section>
 
     <div class="guide-cta">
@@ -103,8 +81,7 @@ button {
 }
 
 .eyebrow,
-.section-heading p,
-.roadmap-section>div>p {
+.section-heading p {
   margin: 0 0 10px;
   color: #2563eb;
   font-size: 12px;
@@ -176,13 +153,11 @@ h1 span {
   font-style: normal;
 }
 
-.formula-section,
-.roadmap-section {
+.formula-section {
   margin-top: 100px;
 }
 
-.section-heading h2,
-.roadmap-section h2 {
+.section-heading h2 {
   max-width: 800px;
   margin: 0;
   color: #102a4c;
@@ -225,54 +200,10 @@ h1 span {
   font-size: 20px;
 }
 
-.parameter-grid p,
-.roadmap-section li p {
+.parameter-grid p {
   margin: 0;
   color: #64748b;
   line-height: 1.7;
-}
-
-.roadmap-section {
-  padding: clamp(28px, 5vw, 52px);
-  border-radius: 28px;
-  background: #dfeefa;
-}
-
-.roadmap-section ul {
-  display: grid;
-  gap: 10px;
-  margin: 36px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.roadmap-section li {
-  display: grid;
-  grid-template-columns: 46px 1fr;
-  gap: 14px;
-  padding: 20px;
-  border: 1px solid #c8ddec;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.roadmap-section li>span {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 50%;
-  background: #1d4ed8;
-  color: white;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.roadmap-section li strong {
-  display: block;
-  margin-bottom: 5px;
-  color: #123c83;
-  font-size: 17px;
 }
 
 .guide-cta {
@@ -280,7 +211,7 @@ h1 span {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-top: 22px;
+  margin-top: 72px;
   padding: 26px 30px;
   border-radius: 20px;
   background: #102a4c;

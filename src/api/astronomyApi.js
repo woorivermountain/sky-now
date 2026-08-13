@@ -1,4 +1,4 @@
-import { apiClient } from './httpClient'
+import { apiClient } from './httpClient.js'
 
 function getXmlText(document, selector) {
   return document.querySelector(selector)?.textContent?.trim() ?? ''

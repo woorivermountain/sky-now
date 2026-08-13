@@ -1,6 +1,6 @@
-import { createFallbackWeather } from '../data/weatherMockData'
-import { fetchKmaNowcast, fetchKmaUltraShortForecast } from '../api/kmaApi'
-import { fetchAstronomyForLocation } from './astronomyService'
+import { createFallbackWeather } from '../data/weatherMockData.js'
+import { fetchKmaNowcast, fetchKmaUltraShortForecast } from '../api/kmaApi.js'
+import { fetchAstronomyForLocation } from './astronomyService.js'
 
 const KMA_GRID = {
   earthRadius: 6371.00877,

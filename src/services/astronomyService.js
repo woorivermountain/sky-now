@@ -1,4 +1,4 @@
-import { fetchAreaRiseSet } from '../api/astronomyApi'
+import { fetchAreaRiseSet } from '../api/astronomyApi.js'
 
 const riseSetCache = new Map()
 

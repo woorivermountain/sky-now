@@ -1,4 +1,4 @@
-import { apiClient } from './httpClient'
+import { apiClient } from './httpClient.js'
 
 function validateKmaResponse(data, endpoint) {
   const resultCode = data.response?.header?.resultCode

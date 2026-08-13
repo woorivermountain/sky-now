@@ -28,7 +28,6 @@ const seoulWeather = ref({
   sunset: '2026-08-12T19:27',
   weatherCode: 2,
 })
-const liveDataState = ref('기상청 연결 중')
 const { displayTemp, unitSymbol } = useTemperature()
 let previewFrameId
 let previewCycleStartedAt
@@ -70,14 +69,6 @@ const previewClock = computed(() => {
   const minutes = Math.floor(previewScene.value.demoMinutes % 60)
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
 })
-
-const previewPhaseLabel = computed(() => ({
-  sunrise: '일출 · 하루가 밝아오는 시간',
-  morning: '오전 · 맑고 선명한 빛',
-  midday: '정오 · 태양이 가장 높은 시간',
-  afternoon: '오후 · 퇴근을 향해 흐르는 빛',
-  'golden-hour': '일몰 · 하루를 마무리하는 빛',
-})[previewScene.value.phase])
 
 // 12초 소개 장면에서는 실제 최저·최고기온과 현재 관측값을 기준으로
 // 일출부터 일몰까지의 변화를 부드럽게 보간해 데이터도 함께 흐르게 합니다.
@@ -156,6 +147,18 @@ const previewSunsetGuide = computed(() => {
   }
 })
 
+const previewNarrative = computed(() => {
+  const weather = previewDemoWeather.value
+
+  return ({
+    sunrise: `해가 떠오르며 기온이 ${weather.temp}°C로 천천히 오르고 있어요.`,
+    morning: `구름 ${weather.cloudCover}% 사이로 선명한 오전빛이 들어옵니다.`,
+    midday: `태양이 가장 높은 시간, 풍속 ${weather.windSpeed} km/h의 한낮이에요.`,
+    afternoon: `퇴근까지 ${previewWorkday.value.value}, 오후의 빛이 천천히 낮아집니다.`,
+    'golden-hour': `일몰까지 ${previewSunsetGuide.value.value}, 하늘이 노을빛으로 바뀌고 있어요.`,
+  })[previewScene.value.phase]
+})
+
 const previewPalette = computed(() => getDaylightPalette(previewScene.value.progress))
 const previewVideoGroup = computed(() => getWeatherVideoGroup(seoulWeather.value, 'midday'))
 const previewVideoSources = computed(() => WEATHER_VIDEO_GROUPS[previewVideoGroup.value] ?? WEATHER_VIDEO_GROUPS['partly-cloudy-day'])
@@ -176,12 +179,6 @@ const previewStyle = computed(() => ({
   '--preview-sky-horizon': previewPalette.value.horizon,
   '--preview-warmth': previewPalette.value.warmth,
 }))
-
-const observationLabel = computed(() => {
-  const observed = seoulWeather.value.observationTime
-  if (!observed) return liveDataState.value
-  return `${observed.slice(11, 16)} 발표 · 기상청`
-})
 
 function animatePreviewCycle(timestamp) {
   if (!previewCycleStartedAt) previewCycleStartedAt = timestamp
@@ -213,9 +210,7 @@ onMounted(async () => {
 
   try {
     seoulWeather.value = await fetchKmaWeather(SEOUL)
-    liveDataState.value = '기상청 실황·예보 연결'
   } catch (error) {
-    liveDataState.value = '장면 데모 · API 재연결 중'
     console.warn('서울 소개 미리보기 데이터를 불러오지 못했습니다.', error.message)
   }
 })
@@ -263,14 +258,13 @@ onBeforeUnmount(() => {
         <div class="preview-info">
           <div class="preview-location">
             <span>서울특별시 · 디지털 창문</span>
-            <small>{{ observationLabel }}</small>
           </div>
 
           <div class="preview-current">
             <strong>{{ displayTemp(previewDemoWeather.temp) }}<small>{{ unitSymbol }}</small></strong>
             <div>
               <p>{{ previewStatusLabel }}</p>
-              <small>{{ previewPhaseLabel }}</small>
+              <small>{{ previewNarrative }}</small>
             </div>
           </div>
 
@@ -393,8 +387,9 @@ onBeforeUnmount(() => {
         <ul>
           <li><b>날씨</b><span>기상청 JSON · 초단기실황 + 초단기예보</span></li>
           <li><b>태양</b><span>한국천문연구원 XML · 일출 + 일몰 + 박명</span></li>
-          <li><b>인증키</b><span><code>.env.local</code>에서만 읽고 Vite 프록시가 전달</span></li>
-          <li><b>캐시</b><span>날씨 10분 · 출몰시각은 날짜와 대표 지역 단위로 재사용</span></li>
+          <li><b>인증키</b><span><code>.env.local</code> 또는 배포 환경변수에서 서버만 읽음</span></li>
+          <li><b>프록시</b><span>개발 Vite · 운영 Node가 같은 <code>weatherProxy</code> 사용</span></li>
+          <li><b>캐시</b><span><code>useWeatherCache</code> 10분 · 출몰시각은 날짜·대표 지역 단위 재사용</span></li>
         </ul>
       </div>
 
@@ -446,72 +441,100 @@ onBeforeUnmount(() => {
     <section class="structure-section content-section">
       <div class="section-heading">
         <p>VUE PROJECT STRUCTURE</p>
-        <h2>페이지·컴포넌트·상태·장면 엔진·API를 역할별로 분리했습니다.</h2>
-        <span>현재 실제 실행 파일을 기준으로 정리했습니다. 화면은 외부 API 주소나 인증키를 알지 않고 정리된 날씨 객체만 전달받습니다.</span>
+        <h2>화면부터 데이터 처리와 운영 서버까지 역할별로 분리했습니다.</h2>
+        <span>현재 제출 구조를 기준으로 정리했습니다. Vue 화면은 외부 API 주소나 인증키를 알지 않고 정규화된 날씨 객체만 전달받습니다.</span>
       </div>
       <div class="structure-board">
-        <div class="root-node"><b>src/</b><span>Vue 애플리케이션</span></div>
-        <div class="branch-line"></div>
-        <div class="folder-columns">
-          <article class="folder-card folder-card--views">
-            <header><span>ROUTE PAGE</span><strong>views/</strong></header>
-            <ul>
-              <li><b>WeatherAboutView</b><small>서비스 첫 화면</small></li>
-              <li><b>WeatherHomeView</b><small>날씨 대시보드</small></li>
-              <li><b>WeatherDetailView</b><small>지역 동적 상세 페이지</small></li>
-              <li><b>SceneGuide · NotFound</b><small>안내 페이지와 404 처리</small></li>
-            </ul>
-          </article>
+        <div class="root-node">
+          <div><i></i><b>sky-now/</b></div>
+          <span>Vue 애플리케이션과 운영 서버를 역할별로 분리한 구조</span>
+        </div>
 
-          <article class="folder-card folder-card--common">
-            <header><span>SHARED UI</span><strong>components/common/</strong></header>
-            <ul>
-              <li><b>BaseDashboardCard</b><small>슬롯 기반 공통 카드</small></li>
-              <li><b>UnitToggle</b><small>모든 페이지의 온도 설정</small></li>
-              <li><b>재사용 기준</b><small>날씨 데이터에 직접 의존하지 않음</small></li>
-            </ul>
-          </article>
+        <div class="structure-layers">
+          <section class="structure-layer">
+            <header class="layer-heading">
+              <span>01</span>
+              <div><strong>화면과 인터페이스</strong><small>사용자가 보고 조작하는 Vue UI</small></div>
+            </header>
+            <div class="folder-columns">
+              <article class="folder-card">
+                <header><span>ROUTE PAGE</span><strong>src/views/</strong></header>
+                <ul>
+                  <li><b>WeatherAboutView</b><small>서비스 첫 화면</small></li>
+                  <li><b>WeatherHomeView</b><small>날씨 대시보드</small></li>
+                  <li><b>WeatherDetailView</b><small>지역 상세 페이지</small></li>
+                  <li><b>SceneGuide · 404</b><small>안내와 예외 화면</small></li>
+                </ul>
+              </article>
 
-          <article class="folder-card folder-card--weather">
-            <header><span>WEATHER DOMAIN</span><strong>components/weather/</strong></header>
-            <ul>
-              <li><b>WeatherHome</b><small>홈 상태와 화면 조합</small></li>
-              <li><b>WeatherMap · Card</b><small>전국 지도와 지역 카드</small></li>
-              <li><b>SearchBar</b><small>검색 props / emits</small></li>
-              <li><b>LiveSun · Video</b><small>디지털 창문 장면 표현</small></li>
-              <li><b>scene/ · utils/</b><small>강수 표현과 장면 계산</small></li>
-            </ul>
-          </article>
+              <article class="folder-card">
+                <header><span>SHARED UI</span><strong>components/common/</strong></header>
+                <ul>
+                  <li><b>BaseDashboardCard</b><small>슬롯 기반 공통 카드</small></li>
+                  <li><b>UnitToggle</b><small>전역 온도 단위 설정</small></li>
+                </ul>
+              </article>
 
-          <article class="folder-card folder-card--state">
-            <header><span>SHARED STATE & LOGIC</span><strong>stores/ · composables/</strong></header>
-            <ul>
-              <li><b>configStore</b><small>단위 · 보기 모드 · 패널 상태</small></li>
-              <li><b>state / getters</b><small>공유 상태와 계산된 설정</small></li>
-              <li><b>actions</b><small>여러 UI를 함께 전환</small></li>
-              <li><b>useTemperature</b><small>공통 온도 변환 로직</small></li>
-            </ul>
-          </article>
+              <article class="folder-card">
+                <header><span>WEATHER UI</span><strong>components/weather/</strong></header>
+                <ul>
+                  <li><b>WeatherHome</b><small>홈 화면과 스타일</small></li>
+                  <li><b>Map · Card · Search</b><small>지역 탐색 기능</small></li>
+                  <li><b>LiveSun · Video</b><small>디지털 창문 표현</small></li>
+                  <li><b>scene/</b><small>비·눈 Canvas 효과</small></li>
+                </ul>
+              </article>
+            </div>
+          </section>
 
-          <article class="folder-card folder-card--api">
-            <header><span>EXTERNAL DATA</span><strong>api/ · services/</strong></header>
-            <ul>
-              <li><b>httpClient</b><small>Axios 공통 설정과 오류 변환</small></li>
-              <li><b>kmaApi · astronomyApi</b><small>기상청 JSON · 천문연구원 XML 요청</small></li>
-              <li><b>kmaWeather</b><small>기상 코드를 화면용 날씨로 변환</small></li>
-              <li><b>astronomyService</b><small>일출·일몰 정규화와 지역별 캐시</small></li>
-            </ul>
-          </article>
+          <section class="structure-layer">
+            <header class="layer-heading">
+              <span>02</span>
+              <div><strong>상태와 데이터 처리</strong><small>공유 상태, 외부 데이터와 장면 계산</small></div>
+            </header>
+            <div class="folder-columns">
+              <article class="folder-card">
+                <header><span>SHARED LOGIC</span><strong>stores/ · composables/</strong></header>
+                <ul>
+                  <li><b>configStore</b><small>단위 · 보기 모드</small></li>
+                  <li><b>useTemperature</b><small>온도 변환</small></li>
+                  <li><b>useWeatherCache</b><small>10분 날씨 캐시</small></li>
+                </ul>
+              </article>
 
-          <article class="folder-card folder-card--support">
-            <header><span>ENGINE, DATA & ROUTE</span><strong>features/ · data/ · router/</strong></header>
-            <ul>
-              <li><b>weather-scene/</b><small>날씨 분류 · 팔레트 · 영상 선택</small></li>
-              <li><b>weatherMockData</b><small>API 실패 시 계절 기준 대체값</small></li>
-              <li><b>regions · districts</b><small>전국 시·도와 시·군·구 좌표</small></li>
-              <li><b>router/index</b><small>페이지와 동적 상세 주소</small></li>
-            </ul>
-          </article>
+              <article class="folder-card">
+                <header><span>EXTERNAL DATA</span><strong>api/ · services/</strong></header>
+                <ul>
+                  <li><b>httpClient · APIs</b><small>JSON · XML 요청</small></li>
+                  <li><b>kmaWeather</b><small>날씨 객체 변환</small></li>
+                  <li><b>astronomyService</b><small>일출·일몰 정규화</small></li>
+                </ul>
+              </article>
+
+              <article class="folder-card">
+                <header><span>ENGINE & DATA</span><strong>features/ · data/ · router/</strong></header>
+                <ul>
+                  <li><b>weather-scene/</b><small>장면 분류와 팔레트</small></li>
+                  <li><b>regions · districts</b><small>전국 지역 좌표</small></li>
+                  <li><b>router/index</b><small>페이지 주소 연결</small></li>
+                </ul>
+              </article>
+            </div>
+          </section>
+
+          <section class="structure-layer structure-layer--runtime">
+            <header class="layer-heading">
+              <span>03</span>
+              <div><strong>운영 환경</strong><small>인증키를 보호하고 빌드 결과를 제공하는 서버</small></div>
+            </header>
+            <article class="runtime-strip">
+              <div><b>server/weatherProxy</b><small>기상청·천문연구원 보안 프록시</small></div>
+              <i></i>
+              <div><b>server/index</b><small>정적 빌드와 SPA fallback</small></div>
+              <i></i>
+              <div><b>.env.local</b><small>브라우저 밖에서 인증키 주입</small></div>
+            </article>
+          </section>
         </div>
 
         <div class="architecture-flow" aria-label="날씨 서비스 실행 흐름">
@@ -521,7 +544,7 @@ onBeforeUnmount(() => {
           <i>→</i>
           <div><span>03</span><b>Weather Components</b><small>지도·카드·디지털 창문 조합</small></div>
           <i>↔</i>
-          <div><span>04</span><b>Store · Service · API</b><small>설정 공유 · 데이터 변환 · 외부 요청</small></div>
+          <div><span>04</span><b>Store · Service · Proxy</b><small>설정 공유 · 데이터 변환 · 보안 요청</small></div>
         </div>
 
         <div class="api-usage-board composition-usage-board" aria-label="Composition API 사용 구조">
@@ -1222,52 +1245,106 @@ h1 span {
 }
 
 .structure-board {
-  padding: clamp(24px, 5vw, 50px);
+  padding: clamp(22px, 4vw, 42px);
   border: 1px solid #dbe5f0;
-  border-radius: 30px;
-  background: #e8f1fb;
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, .42), transparent 34%),
+    #f7faff;
+  box-shadow: 0 24px 70px rgba(32, 74, 117, .08);
 }
 
 .root-node {
-  width: fit-content;
-  margin: 0 auto;
-  padding: 13px 24px;
-  border-radius: 14px;
-  background: #123c83;
-  color: white;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 22px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 20px;
+  background: linear-gradient(135deg, #102a4c, #164b88);
+  color: #fff;
+  box-shadow: 0 16px 34px rgba(16, 42, 76, .18);
 }
 
-.root-node b,
+.root-node>div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.root-node i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #7dd3fc;
+  box-shadow: 0 0 0 6px rgba(125, 211, 252, .13);
+}
+
+.root-node b {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 17px;
+}
+
 .root-node span {
-  display: block;
+  color: #dbeafe;
+  font-size: 12px;
 }
 
-.root-node span {
-  color: #bfdbfe;
-  font-size: 11px;
+.structure-layers {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
 }
 
-.branch-line {
-  width: 1px;
+.structure-layer {
+  padding: 18px;
+  border: 1px solid #dce8f4;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.layer-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 14px;
+  padding: 0 2px;
+}
+
+.layer-heading>span {
+  display: grid;
+  width: 34px;
   height: 34px;
-  margin: 0 auto;
-  background: #93b7da;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 11px;
+  background: #e0edff;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.layer-heading div {
+  display: grid;
+  gap: 2px;
+}
+
+.layer-heading strong {
+  color: #163b68;
+  font-size: 15px;
+}
+
+.layer-heading small {
+  color: #7890a8;
+  font-size: 11px;
 }
 
 .folder-columns {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.folder-card--views,
-.folder-card--common,
-.folder-card--weather,
-.folder-card--state,
-.folder-card--api,
-.folder-card--support {
-  grid-column: span 2;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 12px;
 }
 
 .composition-usage-board {
@@ -1300,31 +1377,41 @@ h1 span {
 }
 
 .folder-card {
+  display: grid;
+  height: 100%;
+  grid-template-rows: auto 1fr;
   overflow: hidden;
-  border: 1px solid #cbdceb;
-  border-radius: 20px;
+  border: 1px solid #dbe6f0;
+  border-radius: 16px;
   background: white;
+  box-shadow: 0 8px 24px rgba(31, 69, 108, .05);
 }
 
 .folder-card header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
-  background: #dbeafe;
+  height: 62px;
+  box-sizing: border-box;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e3edf6;
+  background: #f4f8fd;
 }
 
 .folder-card header span {
-  color: #2563eb;
-  font-size: 10px;
+  color: #5b8bc5;
+  font-size: 9px;
   font-weight: 900;
   letter-spacing: 0.12em;
 }
 
 .folder-card header strong {
-  color: #123c83;
+  color: #183f6d;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: clamp(13px, 1.3vw, 18px);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: right;
   letter-spacing: -.03em;
 }
 
@@ -1332,7 +1419,7 @@ h1 span {
   display: grid;
   gap: 0;
   margin: 0;
-  padding: 12px 20px 18px;
+  padding: 8px 16px 12px;
   list-style: none;
 }
 
@@ -1340,8 +1427,8 @@ h1 span {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 11px 0;
+  gap: 12px;
+  padding: 9px 0;
   border-bottom: 1px solid #e2e8f0;
 }
 
@@ -1352,12 +1439,53 @@ h1 span {
 .folder-card li b {
   color: #26496f;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .folder-card li small {
   color: #64748b;
+  font-size: 11px;
+  line-height: 1.45;
   text-align: right;
+}
+
+.structure-layer--runtime {
+  background: linear-gradient(135deg, rgba(228, 240, 253, .8), rgba(247, 251, 255, .96));
+}
+
+.runtime-strip {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid #d8e6f3;
+  border-radius: 16px;
+  background: white;
+}
+
+.runtime-strip>div {
+  display: grid;
+  gap: 5px;
+}
+
+.runtime-strip b {
+  color: #183f6d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.runtime-strip small {
+  color: #6d8298;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.runtime-strip>i {
+  width: 1px;
+  height: 34px;
+  background: #dce8f4;
 }
 
 .architecture-flow {
@@ -1453,24 +1581,16 @@ h1 span {
     grid-template-columns: 1fr 1fr;
   }
 
+  .folder-columns .folder-card:last-child {
+    grid-column: 1 / -1;
+  }
+
   .commute-value-grid {
     grid-template-columns: 1fr;
   }
 
   .commute-value-grid article {
     min-height: 0;
-  }
-
-  .folder-card--views,
-  .folder-card--common,
-  .folder-card--state,
-  .folder-card--api,
-  .folder-card--support {
-    grid-column: auto;
-  }
-
-  .folder-card--weather {
-    grid-column: 1 / -1;
   }
 
   .architecture-flow {
@@ -1492,13 +1612,23 @@ h1 span {
     grid-template-columns: 1fr;
   }
 
-  .folder-card--views,
-  .folder-card--common,
-  .folder-card--weather,
-  .folder-card--state,
-  .folder-card--api,
-  .folder-card--support {
+  .folder-columns .folder-card:last-child {
     grid-column: auto;
+  }
+
+  .root-node {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .runtime-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .runtime-strip>i {
+    width: 100%;
+    height: 1px;
   }
 
   .architecture-flow {

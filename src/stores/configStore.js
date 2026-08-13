@@ -15,8 +15,6 @@ export const useConfigStore = defineStore('config', {
     viewMode: 'dashboard',
     // 풍경 툴바와 정보 패널이 함께 참조하는 열림 상태입니다.
     isLandscapeInfoOpen: false,
-    // 나만의 추가 state: 마지막 단위 변경 시각을 기록합니다.
-    lastUnitChangedAt: null,
   }),
 
   getters: {
@@ -32,7 +30,6 @@ export const useConfigStore = defineStore('config', {
     // 과제 필수 action: 섭씨와 화씨를 전환합니다.
     toggleUnit() {
       this.unit = this.unit === 'celsius' ? 'fahrenheit' : 'celsius'
-      this.lastUnitChangedAt = new Date().toISOString()
       window.localStorage.setItem('sky-now-temperature-unit', this.unit)
     },
     openLandscapeMode() {
@@ -41,9 +38,6 @@ export const useConfigStore = defineStore('config', {
     },
     openDashboardMode() {
       this.viewMode = 'dashboard'
-    },
-    showLandscapeInfo() {
-      this.isLandscapeInfoOpen = true
     },
     hideLandscapeInfo() {
       this.isLandscapeInfoOpen = false

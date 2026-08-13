@@ -150,18 +150,21 @@ h3 {
 
 .card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 7px;
 }
 
 button {
+  min-width: 0;
   width: 100%;
-  padding: 9px 8px;
+  padding: 9px 6px;
   border: 0;
   border-radius: 9px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
   transition: background 0.2s ease, transform 0.2s ease;
 }
 

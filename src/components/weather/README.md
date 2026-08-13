@@ -13,7 +13,7 @@ components/
     ├── LiveSun.vue
     ├── WeatherVideoBackground.vue
     └── utils/
-        └── weatherScene.js
+        └── 배경 계산은 src/features/weather-scene에서 관리
 
 stores/configStore.js
 composables/useTemperature.js
@@ -29,7 +29,7 @@ data/weather/
 - `../../services/kmaWeather.js`: 기상청 응답을 화면용 날씨 객체로 변환합니다.
 - `../../data/weather/regions.js`: 대한민국 17개 지역의 이름과 좌표처럼 변하지 않는 원본 데이터를 관리합니다.
 - `../../data/weather/districts.js`: 광역시·도 선택 후 요청할 전국 229개 시·군·구 중심 좌표를 관리합니다.
-- `utils/weatherScene.js`: 날씨 코드, 강수, 구름량, 풍속, 시간대로 배경 그룹을 결정합니다.
+- `features/weather-scene`: 날씨 코드, 강수, 구름량, 풍속, 시간대로 배경 그룹을 결정합니다.
 - `BaseDashboardCard.vue`: 공통 카드 디자인과 슬롯 영역을 제공합니다.
 - `SearchBar.vue`: 검색어를 props로 받고 변경된 입력값을 emit으로 부모에게 전달합니다.
 - `WeatherCard.vue`: 지역 날씨를 props로 받고 카드 선택·상세보기·풍경 보기 이벤트를 emit으로 전달합니다.
@@ -43,7 +43,7 @@ data/weather/
 
 1. 기상청 초단기실황에서 현재 기온, 습도, 강수 형태·강수량, 풍향과 풍속을 받고 가장 가까운 초단기예보에서 하늘 상태를 받습니다.
 2. 기상청 응답에 없는 일출·일몰 같은 풍경 보조값은 앱의 계절·좌표 기반 계산값으로 보완합니다.
-3. `weatherScene.js`가 날씨 코드와 수치를 장면 그룹으로 변환합니다.
+3. `features/weather-scene`이 날씨 코드와 수치를 장면 그룹으로 변환합니다.
 4. 구름 영상, 강수 효과, 시간대 색감과 계산된 태양 위치를 하나의 하늘 장면으로 합성합니다.
 5. 창가 모드의 `하늘 해석 엔진`과 퇴근길 패널에서 장면 계산값과 생활 안내를 확인합니다.
 

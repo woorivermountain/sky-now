@@ -1,18 +1,12 @@
 // motionIndex는 640px 표본 프레임을 1초 간격으로 비교한 화면 변화율입니다.
 // 브라우저에서 playbackRate를 바꾸지 않고, 풍속과 가까운 움직임의 원본을 고르는 데 사용합니다.
+const mediaBaseUrl = String(import.meta.env?.VITE_MEDIA_BASE_URL ?? '').replace(/\/$/, '')
+const mediaUrl = (path) => `${mediaBaseUrl}${path}`
+
 const MEDIA = Object.freeze({
-  blueSky: Object.freeze({
-    id: 'blue-sky',
-    src: '/videos/pexels-blue-sky-7692657.mp4',
-    motionIndex: 1.81,
-    blurPx: 0.35,
-    opacityScale: 0.82,
-    containsSun: true,
-    loopFadeSeconds: 3.2,
-  }),
   mediumClouds: Object.freeze({
     id: 'medium-clouds',
-    src: '/weather-mockup/videos/pexels-clouds-medium-11868811.mp4',
+    src: mediaUrl('/weather-mockup/videos/pexels-clouds-medium-11868811.mp4'),
     motionIndex: 7.17,
     blurPx: 0.45,
     opacityScale: 0.78,
@@ -21,7 +15,7 @@ const MEDIA = Object.freeze({
   }),
   fastClouds: Object.freeze({
     id: 'fast-clouds',
-    src: '/weather-mockup/videos/pexels-clouds-fast-11595827.mp4',
+    src: mediaUrl('/weather-mockup/videos/pexels-clouds-fast-11595827.mp4'),
     motionIndex: 14.25,
     blurPx: 0.6,
     opacityScale: 0.72,
@@ -30,7 +24,7 @@ const MEDIA = Object.freeze({
   }),
   softClouds: Object.freeze({
     id: 'soft-clouds',
-    src: '/weather-mockup/videos/clouds-only.mp4',
+    src: mediaUrl('/weather-mockup/videos/clouds-only.mp4'),
     motionIndex: 12.77,
     blurPx: 1.15,
     opacityScale: 0.68,
@@ -39,7 +33,7 @@ const MEDIA = Object.freeze({
   }),
   distantClouds: Object.freeze({
     id: 'distant-clouds',
-    src: '/weather-mockup/videos/clouds-drift.mp4',
+    src: mediaUrl('/weather-mockup/videos/clouds-drift.mp4'),
     motionIndex: 12.41,
     blurPx: 0.5,
     opacityScale: 0.76,
@@ -48,25 +42,16 @@ const MEDIA = Object.freeze({
   }),
   overcastSky: Object.freeze({
     id: 'overcast-sky',
-    src: '/weather-mockup/videos/pexels-overcast-5656141.mp4',
+    src: mediaUrl('/weather-mockup/videos/pexels-overcast-5656141.mp4'),
     motionIndex: 3.27,
     blurPx: 0.65,
     opacityScale: 0.86,
     containsSun: false,
     loopFadeSeconds: 2.4,
   }),
-  sunsetSky: Object.freeze({
-    id: 'sunset-sky',
-    src: '/weather-mockup/videos/pexels-sunset-4331389.mp4',
-    motionIndex: 2.47,
-    blurPx: 1.2,
-    opacityScale: 0.78,
-    containsSun: true,
-    loopFadeSeconds: 2.4,
-  }),
   nightSky: Object.freeze({
     id: 'night-sky',
-    src: '/weather-mockup/videos/pexels-night-7725992.mp4',
+    src: mediaUrl('/weather-mockup/videos/pexels-night-7725992.mp4'),
     motionIndex: 1.93,
     blurPx: 0.45,
     opacityScale: 0.88,
@@ -75,7 +60,7 @@ const MEDIA = Object.freeze({
   }),
 })
 
-// 절차형 태양과 중복되는 태양 포함 영상은 현재 합성 묶음에서 제외합니다.
+// 절차형 태양과 겹치지 않는 구름·밤하늘 영상만 장면에 조합합니다.
 const SOURCE_SETS = Object.freeze({
   clear: [MEDIA.mediumClouds],
   lightClouds: [MEDIA.mediumClouds, MEDIA.distantClouds],

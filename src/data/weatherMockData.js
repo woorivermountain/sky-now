@@ -1,5 +1,5 @@
-import { REGION_DISTRICTS } from './weather/districts'
-import { KOREA_REGIONS } from './weather/regions'
+import { REGION_DISTRICTS } from './weather/districts.js'
+import { KOREA_REGIONS } from './weather/regions.js'
 
 // 라우터 상세 페이지가 URL의 cityId로 찾을 수 있는 고정 위치 목록입니다.
 // 날씨 수치는 API에서 받고, 이름과 좌표처럼 변하지 않는 기본 정보만 관리합니다.
